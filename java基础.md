@@ -4,7 +4,7 @@
 
 ### 1、JavaSE
 
-![](/Users/panda/Documents/GitHub/note/image/JavaSE.png)
+![](image/JavaSE.png)
 
 - Java SE就是标准版，包含标准的JVM和标准库，
 - Java EE是企业版，它只是在Java SE的基础上加上了大量的API和库，以便方便开发Web应用、数据库、消息服务等，Java EE的应用使用的虚拟机和Java SE完全相同。
@@ -12,7 +12,7 @@
 
 ### 2、JDK与JRE
 
-![](/Users/panda/Documents/GitHub/note/image/JDKJRE.png)
+![](image/JDKJRE.png)
 
 - JRE就是运行Java字节码的虚拟机。
 - 但是，如果只有Java源码，要编译成Java字节码，就需要JDK；
