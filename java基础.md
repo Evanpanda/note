@@ -394,4 +394,394 @@ p.run();//应该打印Student.run
   byte[] b3 = "Hello".getBytes(StandardCharsets.UTF_8); // 按UTF-8编码转换
   ```
 
-  如果要把已知编码的byte[]转换为String，可以这样做：
+  如果要把已知编码的`byte[]`转换为`String`，可以这样做：
+
+  ```java
+  byte[] b = ...
+  String s1 = new String(b, "GBK"); // 按GBK转换
+  String s2 = new String(b, StandardCharsets.UTF_8); // 按UTF-8转换
+  ```
+
+- Java编译器对`String`做了特殊处理，使得我们可以直接用`+`拼接字符串
+
+- 为了能高效拼接字符串，Java标准库提供了`StringBuilder`它是一个可变对象，可以预分配缓冲区，
+
+- ```java
+  StringBuilder sb = new StringBuilder(1024);
+  for (int i = 0; i < 1000; i++) {
+      sb.append(',');
+      sb.append(i);
+  }
+  String s = sb.toString();
+  ```
+
+  `StringBuilder`还可以进行链式操作：
+
+  ```java
+   var sb = new StringBuilder(1024);
+          sb.append("Mr ")
+            .append("Bob")
+            .append("!")//Mr.Bob!
+            .insert(0, "Hello, ");//Hello,Mr.Bob!
+  ```
+
+  进行链式操作的关键是，定义的`append()`方法会返回`this`
+
+- `String`还提供了一个静态方法`join()`
+
+- ```java
+  String[] names = {"Bob", "Alice", "Grace"};
+  var s = String.join(", ", names);
+  ```
+
+### 2、包装类型
+
+- 基本类型：`byte`，`short`，`int`，`long`，`boolean`，`float`，`double`，`char`。引用类型可以赋值为`null`，表示空，但基本类型不能赋值为`null`
+
+- 比如，想要把`int`基本类型变成一个引用类型，我们可以定义一个`Integer`类，它只包含一个实例字段`int`，这样，`Integer`类就可以视为`int`的包装类（`Wrapper Class`）
+
+  ```java
+  public class Integer {
+      private int value;
+  
+      public Integer(int value) {
+          this.value = value;
+      }
+  
+      public int intValue() {
+          return this.value;
+      }
+  }
+  ```
+
+- 实际上，因为包装类型非常有用，Java核心库为每种基本类型都提供了对应的包装类型：
+
+  ![](image/class.png)
+
+- 因为`int`和`Integer`可以互相转换，所以，**Java**编译器可以帮助我们自动在`int`和`Integer`之间转型，这种直接把`int`变为`Integer`的赋值写法，称为自动装箱（`Auto Boxing`），反过来，把`Integer`变为`int`的赋值写法，称为自动拆箱（`Auto Unboxing`）。
+
+- 所有的包装类型都是不变类。对两个`Integer`实例进行比较要特别注意：绝对不能用`==`比较，因为`Integer`是引用类型，必须使用`equals()`比较。
+
+- 因为`Integer.valueOf()`可能始终返回同一个`Integer`实例，因此，在我们自己创建`Integer`的时候，以下两种方法：
+
+- - 方法1：`Integer n = new Integer(100)`;
+  - 方法2：`Integer n = Integer.valueOf(100)`
+  - `方法2`更好，因为`方法1`总是创建新的`Integer`实例，`方法2`把内部优化留给`Integer`的实现者去做，即使在当前版本没有优化，也有可能在下一个版本进行优化。
+
+  - 我们把能创建“新”对象的静态方法称为静态工厂方法。`Integer.valueOf()`就是静态工厂方法，它尽可能地返回缓存的实例以节省内存。
+
+- `Integer`类本身还提供了大量方法，例如，最常用的静态方法`parseInt()`可以把字符串解析成一个整数。`Integer`还可以把整数格式化为指定进制的字符串。
+
+  ```java
+  Integer.toString(100,36);//"2s",表示36进制
+  ```
+
+- **Java**的包装类型还定义了一些有用的静态变量
+
+- ```java
+  // boolean只有两个值true/false，其包装类型只需要引用Boolean提供的静态字段:
+  Boolean t = Boolean.TRUE;
+  Boolean f = Boolean.FALSE;
+  // int可表示的最大/最小值:
+  int max = Integer.MAX_VALUE; // 2147483647
+  int min = Integer.MIN_VALUE; // -2147483648
+  // long类型占用的bit和byte数量:
+  int sizeOfLong = Long.SIZE; // 64 (bits)
+  int bytesOfLong = Long.BYTES; // 8 (bytes)
+  ```
+
+- 最后，所有的整数和浮点数的包装类型都继承自`Number`，因此，可以非常方便地直接通过包装类型获取各种基本类型：
+
+- ```java
+  // 向上转型为Number:
+  Number num = new Integer(999);
+  // 获取byte, int, long, float, double:
+  byte b = num.byteValue();
+  int n = num.intValue();
+  long ln = num.longValue();
+  float f = num.floatValue();
+  double d = num.doubleValue();
+  ```
+
+### 3、枚举类
+
+- 为了让编译器能自动检查某个值在枚举的集合内，并且，不同用途的枚举需要不同的类型来标记，不能混用，我们可以使用`enum`来定义枚举类
+
+- ```java
+  public class Main {
+      public static void main(String[] args) {
+          Weekday day = Weekday.SUN;
+          if (day == Weekday.SAT || day == Weekday.SUN) {
+              System.out.println("Work at home!");
+          } else {
+              System.out.println("Work at office!");
+          }
+      }
+  }
+  
+  enum Weekday {
+      SUN, MON, TUE, WED, THU, FRI, SAT;
+  }
+  ```
+
+  注意到定义枚举类是通过关键字`enum`实现的，我们只需依次列出枚举的常量名。首先，`enum`常量本身带有类型信息，即`Weekday.SUN`类型是`Weekday`，编译器会自动检查出类型错误。不同类型的枚举不能互相比较或者赋值，因为类型不符。
+
+- 因为`enum`类型的每个常量在JVM中只有一个唯一实例，所以可以直接用`==`比较：
+
+- 和其他`class`的区别
+
+- - 定义的`enum`类型总是继承自`java.lang.Enum`，且无法被继承；
+  - 只能定义出`enum`的实例，而无法通过`new`操作符创建`enum`的实例；
+  - 定义的每个实例都是引用类型的唯一实例；
+  - 可以将`enum`类型用于`switch`语句。
+
+- 一些方法：
+
+- - `String s = Weekday.SUN.name(); // "SUN"`
+  - `int n = Weekday.MON.ordinal(); // 1`
+  - 默认情况下，对枚举常量调用`toString()`会返回和`name()`一样的字符串。但是，`toString()`可以被覆写，而`name()`则不行。我们可以给`Weekday`添加`toString()`方法：
+
+- 我们可以定义`private`的构造方法，并且，给每个枚举常量添加字段
+
+  ```java
+  enum Weekday {
+    MON(1), TUE(2), WED(3), THU(4), FRI(5), SAT(6), SUN(0);
+  	public final int dayValue;
+  
+  	private Weekday(int dayValue) {
+      this.dayValue = dayValue;
+  	}
+  }
+  ```
+  这样就无需担心顺序的变化，新增枚举常量时，也需要指定一个int值。
+
+### 4、BigInteger和BigDecimal
+
+- 如果我们使用的整数范围超过了`long`型怎么办？这个时候，就只能用软件来模拟一个大整数。`java.math.BigInteger`就是用来表示任意大小的整数。`BigInteger`内部用一个`int[]`数组来模拟一个非常大的整数：
+
+- 对`BigInteger`做运算的时候，只能使用实例方法，例如，加法运算
+
+- ```java
+  BigInteger i1 = new BigInteger("1234567890");
+  BigInteger i2 = new BigInteger("12345678901234567890");
+  BigInteger sum = i1.add(i2); // 12345678902469135780
+  ```
+
+- `BigInteger`和`Integer`、`Long`一样，也是不可变类，并且也继承自`Number`类。
+
+  - 转换为`byte`：`byteValue()`
+  - 转换为`short`：`shortValue()`
+  - 转换为`int`：`intValue()`
+  - 转换为`long`：`longValue()`
+  - 转换为`float`：`floatValue()`
+  - 转换为`double`：`doubleValue()`
+
+  通过上述方法，可以把`BigInteger`转换成基本类型。如果`BigInteger`表示的范围超过了基本类型的范围，转换时将丢失高位信息，即结果不一定是准确的。如果需要准确地转换成基本类型，可以使用`intValueExact()`、`longValueExact()`等方法，在转换时如果超出范围，将直接抛出`ArithmeticException`异常。
+
+- 和`BigInteger`类似，`BigDecimal`可以表示一个任意大小且精度完全准确的浮点数。`BigDecimal`用`scale()`表示小数位数
+
+  ```java
+  BigDecimal d1 = new BigDecimal("123.45");
+  BigDecimal d2 = new BigDecimal("123.4500");
+  BigDecimal d3 = new BigDecimal("1234500");
+  System.out.println(d1.scale()); // 2,两位小数
+  System.out.println(d2.scale()); // 4
+  System.out.println(d3.scale()); // 0
+  ```
+
+  如果一个`BigDecimal`的`scale()`返回负数，例如，`-2`，表示这个数是个整数，并且末尾有2个`0`。
+
+- 可以对一个`BigDecimal`设置它的`scale`，如果精度比原始值低，那么按照指定的方法进行四舍五入或者直接截断：
+
+  ```java
+  BigDecimal d1 = new BigDecimal("123.456789");
+  BigDecimal d2 = d1.setScale(4, RoundingMode.HALF_UP); // 四舍五入，123.4568
+  BigDecimal d3 = d1.setScale(4, RoundingMode.DOWN); // 直接截断，123.4567
+  ```
+
+- 在比较两个`BigDecimal`的值是否相等时，要特别注意，使用`equals()`方法不但要求两个`BigDecimal`的值相等，还要求它们的`scale()`相等
+- 使用`compareTo()`方法来比较，它根据两个值的大小分别返回`负数`、`正数`和`0`，分别表示小于、大于和等于。
+
+### 5、Math
+
+- 求绝对值： `Math.abs(-100); // 100`
+                      `Math.abs(-7.8); // 7.8`
+- 取最大或最小值：`Math.max(100, 99); // 100`
+                                 `Math.min(1.2, 2.3); // 1.2`
+- 计算`x`y次方：`Math.pow(2,      10); // 2的10次方=1024`
+- 计算`√x`：`Math.sqrt(2);      // 1.414…`
+- 计算`e`x次方：`Math.exp(2);      // 7.389…`
+- 计算以`e`为底的对数：`Math.log(4);      // 1.386…`
+- 计算以10为底的对数：`Math.log10(100);      // 2`
+- 三角函数：`Math.sin(3.14); // 0.00159…`
+                    ` Math.cos(3.14); // -0.9999...`
+                    ` Math.tan(3.14); // -0.0015…`
+                    ` Math.asin(1.0); // 1.57079...`
+                     `Math.acos(1.0); // 0.0`
+- 几个数学常量：`double pi = Math.PI; // 3.14159…`
+                            ` double e = Math.E; // 2.7182818…`
+                             `Math.sin(Math.PI / 6); // sin(π/6) = 0.5`
+- 生成一个随机数`x`，`x`的范围是`0 <= x < 1`：`Math.random(); //      0.53907...      `每次都不一样
+
+### 6、Random和SecureRandom
+
+- Random用来创建伪随机数。所谓伪随机数，是指只要给定一个初始的种子，产生的随机数序列是完全一样的。
+
+  ```java
+  Random r = new Random();
+  r.nextInt(); // 2071575453,每次都不一样
+  r.nextInt(10); // 5,生成一个[0,10)之间的int
+  r.nextLong(); // 8811649292570369305,每次都不一样
+  r.nextFloat(); // 0.54335...生成一个[0,1)之间的float
+  r.nextDouble(); // 0.3716...生成一个[0,1)之间的double
+  ```
+
+- 这是因为我们创建`Random`实例时，如果不给定种子，就使用系统当前时间戳作为种子，因此每次运行时，种子不同，得到的伪随机数序列就不同。如果我们在创建`Random`实例时指定一个种子，就会得到完全确定的随机数序列
+
+  ```java
+  Random r = new Random(12345);
+  ```
+
+- `Math.random()`实际上内部调用了`Random`类，所以它也是伪随机数，只是我们无法指定种子。
+
+- `SecureRandom`是用来创建安全的随机数的
+
+- ```java
+  SecureRandom sr = new SecureRandom();
+  System.out.println(sr.nextInt(100));
+  ```
+
+- `SecureRandom`无法指定种子，它使用`RNG`（`random number generator`）算法。`SecureRandom`的安全性是通过操作系统提供的安全的随机种子来生成随机数。这个种子是通过CPU的热噪声、读写磁盘的字节、网络流量等各种随机事件产生的“熵”。
+
+## 五、异常处理
+
+### 1、什么是异常
+
+- 所谓错误，就是程序调用某个函数的时候，如果失败了，就表示出错。调用方如何获知调用失败的信息？有两种方法：
+
+- - 方法一：约定返回错误码。
+  - 方法二：在语言层面上提供一个异常处理机制。
+
+- Java内置了一套异常处理机制，总是使用异常来表示错误。异常是一种`class`，因此它本身带有类型信息。异常可以在任何地方抛出，但只需要在上层捕获，这样就和方法调用分离了：
+
+  ```java
+  try {
+      String s = processFile(“C:\\test.txt”);
+      // ok:
+  } catch (FileNotFoundException e) {
+      // file not found:
+  } catch (SecurityException e) {
+      // no read permission:
+  } catch (IOException e) {
+      // io error:
+  } catch (Exception e) {
+      // other error:
+  }
+  ```
+
+- ![](image/exception.png)
+
+- `Throwable`是异常体系的根，`Throwable`有两个体系：`Error`和`Exception`，
+
+- - `Error`表示严重的错误，程序对此一般无能为力，
+  - 而`Exception`则是运行时的错误，它可以被捕获并处理。
+
+- 必须捕获的异常，包括`Exception`及其子类，但不包括`RuntimeException`及其子类，这种类型的异常称为`Checked Exception`。
+
+- 不需要捕获的异常，包括`Error`及其子类，`RuntimeException`及其子类。
+
+### 2、捕获异常
+
+- 捕获异常使用`try...catch`语句，把可能发生异常的代码放到`try {…}`中，然后使用`catch`捕获对应的`Exception`及其子类：
+
+- 还有一些童鞋喜欢在函数内部“消化”异常：
+
+  ```java
+  static byte[] toGBK(String s) {
+      try {
+          return s.getBytes("GBK");
+      } catch (UnsupportedEncodingException e) {
+          // 什么也不干
+      }
+      return null;
+  ```
+
+- 可以使用多个`catch`语句，每个`catch`分别捕获对应的`Exception`及其子类。**JVM**在捕获到异常后，会从上到下匹配`catch`语句，匹配到某个`catch`后，执行`catch`代码块，然后不再继续匹配。存在多个`catch`的时候，`catch`的顺序非常重要：子类必须写在前面。
+
+- 那么如何消除这些重复的代码？**Java**的`try … catch`机制还提供了`finally`语句，`finally`语句块保证有无错误都会执行。`finally`语句不是必须的，可写可不写；`finally`总是最后执行。
+
+- 某些情况下，可以没有`catch`，只使用`try … finally`结构。
+
+- 如果处理某两个异常的代码是相同的，所以我们可以把它两用`|`合并到一起
+
+### 3、抛出异常
+
+- 需要捕获异常的语句，一般在定义时会抛出一个异常：
+
+- ```java
+  public byte[] getBytes(String charsetName) throws UnsupportedEncodingException{
+    ....
+  }
+  ```
+
+- 如果是测试代码，`try`的写法就略显麻烦。如果不想写任何`try`代码，可以直接把`main()`方法定义为`throws Exception`。因为`main()`方法声明了可能抛出`Exception`，也就声明了可能抛出所有的`Exception`，因此在内部就无需捕获了。代价就是一旦发生异常，程序会立刻退出
+
+- 通过`printStackTrace()`可以打印出方法的调用栈
+
+- 当发生错误时，例如，用户输入了非法的字符，我们就可以抛出异常
+
+  ```java
+  void process2(String s) {
+      if (s==null) {
+          throw new NullPointerException();
+      }
+  }
+  ```
+
+- 如果一个方法捕获了某个异常后，又在`catch`子句中抛出新的异常，就相当于把抛出的异常类型“转换”了。但是新的异常丢失了原始异常信息，我们已经看不到原始异常的信息了。为了能追踪到完整的异常栈，在构造异常的时候，把原始的`Exception`实例作为参数传进去。**捕获到异常并再次抛出时，一定要留住原始异常，否则很难定位第一案发现场！**
+
+- `finally`抛出异常后，原来在`catch`中准备抛出的异常就“消失”了，因为只能抛出一个异常。没有被抛出的异常称为“被屏蔽”的异常（`Suppressed Exception`）我们一般先用`origin`变量保存原始异常，然后调用`Throwable.addSuppressed()`，把原始异常添加进来，最后在`finally`抛出
+
+### 4、自定义异常
+
+- 自定义一个`BaseException`作为“根异常”，然后，派生出各种业务类型的异常。`BaseException`需要从一个适合的`Exception`派生，通常建议从`RuntimeException`派生
+
+### 5、断言
+
+- 语句`assert x >= 0`;即为断言，断言条件`x >= 0`预期为`true`。如果计算结果为`false`，则断言失败，抛出`AssertionError`。
+- Java断言的特点是：断言失败时会抛出`AssertionError`，导致程序结束退出。因此，断言不能用于可恢复的程序错误，只应该用于开发和测试阶段。
+- 断言需要命令行开启。
+
+### 6、JDK logging
+
+- 输出日志，而不是用`System.out.println()`，有以下几个好处：
+
+- 1. 可以设置输出样式，避免自己每次都写"ERROR: " + var；
+  2. 可以设置输出级别，禁止某些级别输出。例如，只输出错误日志；
+  3. 可以被重定向到文件，这样可以在程序运行结束后查看日志；
+  4. 可以按包名控制日志级别，只输出某些包打的日志；
+  5. 可以……
+
+- ![](image/log1.png)
+
+- ![](image/log2.png)
+
+- 和Java标准库提供的日志不同，`Commons Logging`是一个第三方日志库，它是由Apache创建的日志模块。
+- 使用`Commons Logging`只需要和两个类打交道，并且只有两步：第一步，通过`LogFactory`获取`Log`类的实例； 第二步，使用`Log`实例的方法打日志。（需要apache的第三方包）
+- `Log4j`是一种非常流行的日志框架，最新版本是2.x。当我们使用`Log4j`输出一条日志时，`Log4j`自动通过不同的`Appender`把同一条日志输出到不同的目的地。
+
+## 六、反射
+
+### 1、
+
+- `class`是由**JVM**在执行过程中动态加载的。**JVM**在第一次读取到一种`class`类型时，将其加载进内存。每加载一种`class`，**JVM**就为其创建一个`Class`类型的实例，并关联起来。这个`Class`实例是**JVM**内部创建的，如果我们查看**JDK**源码，可以发现`Class`类的构造方法是`private`，只有**JVM**能创建`Class`实例，我们自己的**Java**程序是无法创建`Class`实例的。
+
+- 由于JVM为每个加载的`class`创建了对应的`Class`实例，并在实例中保存了该`class`的所有信息，包括类名、包名、父类、实现的接口、所有方法、字段等，因此，如果获取了某个`Class`实例，我们就可以通过这个`Class`实例获取到该实例对应的`class`的所有信息。这种通过`Class`实例获取`class`信息的方法称为反射（`Reflection`）
+
+- 如何获取一个`class`的`Class`实例？有三个方法：
+
+- - 直接通过一个`class`的静态变量`class`获取：`Class cls = String.class;`
+  - 如果我们有一个实例变量，可以通过该实例变量提供的`getClass()`方法获取：`String s = "Hello"; Class cls = s.getClass();`
+  - 如果知道一个`class`的完整类名，可以通过静态方法`Class.forName()`获取：`Class cls = Class.forName("java.lang.String");`
+
+- 对任意的一个`Object`实例，只要我们获取了它的`Class`，就可以获取它的一切信息
