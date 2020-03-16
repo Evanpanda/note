@@ -1,29 +1,6 @@
 # java基础
 
-- [java基础](#java--)
-  * [一、什么是java](#-----java)
-    + [1、JavaSE](#1-javase)
-    + [2、JDK与JRE](#2-jdk-jre)
-    + [3、白皮书关键术语](#3--------)
-  * [二、java程序基础](#--java----)
-    + [1、基本数据类型](#1-------)
-    + [2、计算](#2---)
-    + [3、字符串](#3----)
-    + [4、循环和流程](#4------)
-    + [5、数组操作](#5-----)
-  * [三、面向对象编程](#--------)
-    + [1、方法](#1---)
-    + [2、继承](#2---)
-    + [3、组合](#3---)
-    + [4、覆写](#4---)
-    + [5、final](#5-final)
-    + [6、Object方法](#6-object--)
-    + [7、抽象类](#7----)
-    + [8、接口](#8---)
-    + [9、静态字段和静态方法](#9----------)
-    + [10、包](#10--)
-  * [四、java核心类](#--java---)
-    + [1、String](#1-string)
+[TOC]
 
 ## 一、什么是java
 
@@ -101,7 +78,7 @@
 
 - `\t` 表示Tab
 
-- 从Java 13开始//预览功能//，字符串可以用`"""..."""`表示多行字符串（Text Blocks）了。举个例子：
+- 从Java 13开始//预览功能//，字符串可以用`"""..."""`表示多行字符串（`Text Blocks`）了。举个例子：
 
   ```java
   String s = """
@@ -142,7 +119,7 @@
 
 ### 1、方法
 
-- 可变参数用*类型...*定义，可变参数相当于数组类型：
+- 可变参数用`类型…`定义，可变参数相当于数组类型：
 
   ```java
   public void setNames(String...names){
@@ -343,3 +320,78 @@ p.run();//应该打印Student.run
   "Hello".substring(2); // "llo"
   "Hello".substring(2, 4); "ll"
   ```
+  
+- 使用`trim()`方法可以移除字符串首尾空白字符。空白字符包括空格，`\t`，`\r`，`\n`：
+
+  ```java
+  "  \tHello\r\n ".trim(); // "Hello"
+  ```
+
+- `String`还提供了`isEmpty()`和`isBlank()`来判断字符串是否为空和空白字符串：
+
+- ```java
+  "".isEmpty(); // true，因为字符串长度为0
+  "  ".isEmpty(); // false，因为字符串长度不为0
+  "  \n".isBlank(); // true，因为只包含空白字符
+  " Hello ".isBlank(); // false，因为包含非空白字符
+  ```
+
+- 要在字符串中替换子串，有两种方法。一种是根据字符或字符串替换：
+
+- ```java
+  String s = "hello";
+  s.replace('l', 'w'); // "hewwo"，所有字符'l'被替换为'w'
+  s.replace("ll", "~~"); // "he~~o"，所有子串"ll"被替换为"~~"
+  ```
+
+  另一种是通过正则表达式替换：
+
+  ```java
+  String s = "A,,B;C ,D";
+  s.replaceAll("[\\,\\;\\s]+", ","); // "A,B,C,D"
+  ```
+
+- 要分割字符串，使用`split()`方法，并且传入的也是正则表达式：
+
+  ```java
+  String s = "A,B,C,D";
+  String[] ss = s.split("\\,"); // {"A", "B", "C", "D"}
+  ```
+
+- 拼接字符串使用静态方法`join()`，它用指定的字符串连接字符串数组：
+
+  ```java
+  String[] arr = {"A", "B", "C"};
+  String s = String.join("***", arr); // "A***B***C"
+  ```
+
+- 要把任意基本类型或引用类型转换为字符串，可以使用静态方法`valueOf()`。这是一个重载方法，编译器会根据参数自动选择合适的方法：
+
+- ```java
+  String.valueOf(123); // "123"
+  String.valueOf(45.67); // "45.67"
+  String.valueOf(true); // "true"
+  String.valueOf(new Object()); // 类似java.lang.Object@636be97c
+  ```
+
+- 要把字符串转换为其他类型，就需要根据情况。`parseInt`
+
+- `String`和`char[]`类型可以互相转换，方法是：
+
+- ```java
+  char[] cs = "Hello".toCharArray(); // String -> char[]
+  String s = new String(cs); // char[] -> String
+  ```
+
+  如果修改了`char[]`数组，`String`并不会改变,采用复制一份的方法。
+
+- 在Java中，`char`类型实际上就是两个字节的`Unicode`编码。如果我们要手动把字符串转换成其他编码，可以这样做：
+
+- ```java
+  byte[] b1 = "Hello".getBytes(); // 按系统默认编码转换，不推荐
+  byte[] b2 = "Hello".getBytes("UTF-8"); // 按UTF-8编码转换
+  byte[] b2 = "Hello".getBytes("GBK"); // 按GBK编码转换
+  byte[] b3 = "Hello".getBytes(StandardCharsets.UTF_8); // 按UTF-8编码转换
+  ```
+
+  如果要把已知编码的byte[]转换为String，可以这样做：
