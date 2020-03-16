@@ -2,6 +2,8 @@
 
 [TOC]
 
+[TOC]
+
 ## 一、什么是java
 
 ### 1、JavaSE
@@ -320,4 +322,3 @@ p.run();//应该打印Student.run
   "Hello".substring(2); // "llo"
   "Hello".substring(2, 4); "ll"
   ```
-
