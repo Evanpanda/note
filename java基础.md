@@ -1,6 +1,46 @@
 # java基础
+<!-- TOC -->
 
-[TOC]
+- [java基础](#java基础)
+    - [一、什么是java](#一什么是java)
+        - [1、JavaSE](#1javase)
+        - [2、JDK与JRE](#2jdk与jre)
+        - [3、白皮书关键术语](#3白皮书关键术语)
+    - [二、java程序基础](#二java程序基础)
+        - [1、基本数据类型](#1基本数据类型)
+        - [2、计算](#2计算)
+        - [3、字符串](#3字符串)
+        - [4、循环和流程](#4循环和流程)
+        - [5、数组操作](#5数组操作)
+    - [三、面向对象编程](#三面向对象编程)
+        - [1、方法](#1方法)
+        - [2、继承](#2继承)
+        - [3、组合](#3组合)
+        - [4、覆写](#4覆写)
+        - [5、final](#5final)
+        - [6、Object方法](#6object方法)
+        - [7、抽象类](#7抽象类)
+        - [8、接口](#8接口)
+        - [9、静态字段和静态方法](#9静态字段和静态方法)
+        - [10、包](#10包)
+    - [四、java核心类](#四java核心类)
+        - [1、String](#1string)
+        - [2、包装类型](#2包装类型)
+        - [3、枚举类](#3枚举类)
+        - [4、BigInteger和BigDecimal](#4biginteger和bigdecimal)
+        - [5、Math](#5math)
+        - [6、Random和SecureRandom](#6random和securerandom)
+    - [五、异常处理](#五异常处理)
+        - [1、什么是异常](#1什么是异常)
+        - [2、捕获异常](#2捕获异常)
+        - [3、抛出异常](#3抛出异常)
+        - [4、自定义异常](#4自定义异常)
+        - [5、断言](#5断言)
+        - [6、JDK logging](#6jdk-logging)
+    - [六、反射](#六反射)
+        - [1、Class实例](#1class实例)
+
+<!-- /TOC -->
 
 ## 一、什么是java
 
@@ -772,16 +812,18 @@ p.run();//应该打印Student.run
 
 ## 六、反射
 
-### 1、
+### 1、Class实例
 
 - `class`是由**JVM**在执行过程中动态加载的。**JVM**在第一次读取到一种`class`类型时，将其加载进内存。每加载一种`class`，**JVM**就为其创建一个`Class`类型的实例，并关联起来。这个`Class`实例是**JVM**内部创建的，如果我们查看**JDK**源码，可以发现`Class`类的构造方法是`private`，只有**JVM**能创建`Class`实例，我们自己的**Java**程序是无法创建`Class`实例的。
-
 - 由于JVM为每个加载的`class`创建了对应的`Class`实例，并在实例中保存了该`class`的所有信息，包括类名、包名、父类、实现的接口、所有方法、字段等，因此，如果获取了某个`Class`实例，我们就可以通过这个`Class`实例获取到该实例对应的`class`的所有信息。这种通过`Class`实例获取`class`信息的方法称为反射（`Reflection`）
-
 - 如何获取一个`class`的`Class`实例？有三个方法：
-
 - - 直接通过一个`class`的静态变量`class`获取：`Class cls = String.class;`
   - 如果我们有一个实例变量，可以通过该实例变量提供的`getClass()`方法获取：`String s = "Hello"; Class cls = s.getClass();`
   - 如果知道一个`class`的完整类名，可以通过静态方法`Class.forName()`获取：`Class cls = Class.forName("java.lang.String");`
-
 - 对任意的一个`Object`实例，只要我们获取了它的`Class`，就可以获取它的一切信息
+- 我们先看看如何通过`Class`实例获取字段信息。`Class`类提供了以下几个方法来获取字段：
+  - `Field getField(name)`：根据字段名获取某个`public`的`field`（包括父类）
+  - `Field getDeclaredField(name)`：根据字段名获取当前类的某个`field`（不包括父类）
+  - `Field[] getFields()`：获取所有`public`的`field`（包括父类）
+  - `Field[] getDeclaredFields()`：获取当前类的所有`field`（不包括父类）
+- 
