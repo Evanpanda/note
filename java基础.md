@@ -815,15 +815,92 @@ p.run();//应该打印Student.run
 ### 1、Class实例
 
 - `class`是由**JVM**在执行过程中动态加载的。**JVM**在第一次读取到一种`class`类型时，将其加载进内存。每加载一种`class`，**JVM**就为其创建一个`Class`类型的实例，并关联起来。这个`Class`实例是**JVM**内部创建的，如果我们查看**JDK**源码，可以发现`Class`类的构造方法是`private`，只有**JVM**能创建`Class`实例，我们自己的**Java**程序是无法创建`Class`实例的。
+
 - 由于JVM为每个加载的`class`创建了对应的`Class`实例，并在实例中保存了该`class`的所有信息，包括类名、包名、父类、实现的接口、所有方法、字段等，因此，如果获取了某个`Class`实例，我们就可以通过这个`Class`实例获取到该实例对应的`class`的所有信息。这种通过`Class`实例获取`class`信息的方法称为反射（`Reflection`）
+
 - 如何获取一个`class`的`Class`实例？有三个方法：
+
 - - 直接通过一个`class`的静态变量`class`获取：`Class cls = String.class;`
   - 如果我们有一个实例变量，可以通过该实例变量提供的`getClass()`方法获取：`String s = "Hello"; Class cls = s.getClass();`
   - 如果知道一个`class`的完整类名，可以通过静态方法`Class.forName()`获取：`Class cls = Class.forName("java.lang.String");`
+  
 - 对任意的一个`Object`实例，只要我们获取了它的`Class`，就可以获取它的一切信息
+
 - 我们先看看如何通过`Class`实例获取字段信息。`Class`类提供了以下几个方法来获取字段：
   - `Field getField(name)`：根据字段名获取某个`public`的`field`（包括父类）
   - `Field getDeclaredField(name)`：根据字段名获取当前类的某个`field`（不包括父类）
   - `Field[] getFields()`：获取所有`public`的`field`（包括父类）
   - `Field[] getDeclaredFields()`：获取当前类的所有`field`（不包括父类）
-- 
+  
+- ```java
+   Class stdClass = Student.class;
+   // 获取public字段"score":
+   System.out.println(stdClass.getField("score"));//public int Student.score
+   // 获取继承的public字段"name":
+   System.out.println(stdClass.getField("name"));//public java.lang.String Person.name
+   // 获取private字段"grade":
+   System.out.println(stdClass.getDeclaredField("grade"));//private int Student.grade
+  
+  ```
+
+  ```java
+  class Student extends Person {
+      public int score;
+      private int grade;
+  }
+  
+  class Person {
+      public String name;
+  }
+  ```
+
+- 一个`Field`对象包含了一个字段的所有信息：
+
+  - `getName()`：返回字段名称，例如，`"name"`；
+  - `getType()`：返回字段类型，也是一个`Class`实例，例如，`String.class`；
+  - `getModifiers()`：返回字段的修饰符，它是一个`int`，不同的bit表示不同的含义。
+
+- ```java
+  public final class String {
+      private final byte[] value;
+  }
+  
+  Field f = String.class.getDeclaredField("value");
+  f.getName(); // "value"
+  f.getType(); // class [B 表示byte[]类型
+  int m = f.getModifiers();
+  Modifier.isFinal(m); // true
+  Modifier.isPublic(m); // false
+  Modifier.isProtected(m); // false
+  Modifier.isPrivate(m); // true
+  Modifier.isStatic(m); // false
+  ```
+
+- 用`Field.get(Object)`获取指定实例的指定字段的值。在调用`Object value = f.get(p);`前，先写一句：`Field.setAccessible(true)`。调用`Field.setAccessible(true)`的意思是，别管这个字段是不是`public`，一律允许访问。由此一来，反射可以获取`private`字段的值。但是`setAccessible`有时也会失败。
+
+- 通过Field实例既然可以获取到指定实例的字段值，自然也可以设置字段的值。设置字段值是通过`Field.set(Object, Object)`实现的，
+
+- ```java
+  Person p = new Person("Xiao Ming");
+          System.out.println(p.getName()); // "Xiao Ming"
+          Class c = p.getClass();
+          Field f = c.getDeclaredField("name");
+          f.setAccessible(true);
+          f.set(p, "Xiao Hong");
+          System.out.println(p.getName()); // "Xiao Hong"
+  ```
+
+### 2、class实例调用
+
+- `Class`类提供了以下几个方法来获取`Method`：
+  - `Method getMethod(name, Class...)`：获取某个`public`的`Method`（包括父类）
+  - `Method getDeclaredMethod(name, Class...)`：获取当前类的某个`Method`（不包括父类）
+  - `Method[] getMethods()`：获取所有`public`的`Method`（包括父类）
+  - `Method[] getDeclaredMethods()`：获取当前类的所有`Method`（不包括父类）
+- 一个`Method`对象包含一个方法的所有信息：
+  - `getName()`：返回方法名称，例如：`"getScore"`；
+  - `getReturnType()`：返回方法返回值类型，也是一个Class实例，例如：`String.class`；
+  - `getParameterTypes()`：返回方法的参数类型，是一个Class数组，例如：`{String.class, int.class}`；
+  - `getModifiers()`：返回方法的修饰符，它是一个`int`，不同的bit表示不同的含义。
+- 对`Method`实例调用`invoke`就相当于调用该方法，`invoke`的第一个参数是对象实例，即在哪个实例上调用该方法，后面的可变参数要与方法参数一致，否则将报错。
+- 为了调用非public方法，我们通过`Method.setAccessible(true)`允许其调用
