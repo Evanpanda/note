@@ -232,7 +232,7 @@
   }
   ```
 
-### 4、覆写
+### 4、覆写和多态
 
 - 加上`@Override`可以让编译器帮助检查是否进行了正确的覆写。希望进行覆写，但是不小心写错了方法签名，编译器会报错。
 - **Java**的实例方法调用是基于运行时的实际类型的动态调用，而非变量的声明类型。
@@ -251,6 +251,8 @@ p.run();//应该打印Student.run
 - 对于一个类的实例字段，同样可以用`final`修饰。用`final`修饰的字段在初始化后不能被修改。
 
 ### 6、Object方法
+
+- Object是对象的最高级别的，所有的Java对象都**隐式**地继承了Object对象。
 
 - `toString()`：把`instance`输出为`String`；
 - `equals()`：判断两个`instance`是否逻辑相等；
@@ -815,15 +817,21 @@ p.run();//应该打印Student.run
 ### 1、Class实例
 
 - `class`是由**JVM**在执行过程中动态加载的。**JVM**在第一次读取到一种`class`类型时，将其加载进内存。每加载一种`class`，**JVM**就为其创建一个`Class`类型的实例，并关联起来。这个`Class`实例是**JVM**内部创建的，如果我们查看**JDK**源码，可以发现`Class`类的构造方法是`private`，只有**JVM**能创建`Class`实例，我们自己的**Java**程序是无法创建`Class`实例的。
-
 - 由于JVM为每个加载的`class`创建了对应的`Class`实例，并在实例中保存了该`class`的所有信息，包括类名、包名、父类、实现的接口、所有方法、字段等，因此，如果获取了某个`Class`实例，我们就可以通过这个`Class`实例获取到该实例对应的`class`的所有信息。这种通过`Class`实例获取`class`信息的方法称为反射（`Reflection`）
-
 - 如何获取一个`class`的`Class`实例？有三个方法：
 
-- - 直接通过一个`class`的静态变量`class`获取：`Class cls = String.class;`
-  - 如果我们有一个实例变量，可以通过该实例变量提供的`getClass()`方法获取：`String s = "Hello"; Class cls = s.getClass();`
-  - 如果知道一个`class`的完整类名，可以通过静态方法`Class.forName()`获取：`Class cls = Class.forName("java.lang.String");`
-  
+   - 直接通过一个`class`的静态变量`class`获取：`Class cls = String.class;`
+   - 如果我们有一个实例变量，可以通过该实例变量提供的`getClass()`方法获取：`String s = "Hello"; Class cls = s.getClass();`
+   - 如果知道一个`class`的完整类名，可以通过静态方法`Class.forName()`获取：`Class cls = Class.forName("java.lang.String");`
+- 获取父类的class:`getSuperclass()`;如果是两个`Class`实例，要判断一个向上转型是否成立，可以调用`isAssignableFrom()`：
+
+```java
+Integer.class.isAssignableFrom(Integer.class); // true，因为Integer可以赋值给Integer
+Number.class.isAssignableFrom(Integer.class); // true，因为Integer可以赋值给Number
+Object.class.isAssignableFrom(Integer.class); // true，因为Integer可以赋值给Object
+Integer.class.isAssignableFrom(Number.class); // false，因为Number不能赋值给Integer
+```
+
 - 对任意的一个`Object`实例，只要我们获取了它的`Class`，就可以获取它的一切信息
 
 - 我们先看看如何通过`Class`实例获取字段信息。`Class`类提供了以下几个方法来获取字段：
@@ -840,7 +848,7 @@ p.run();//应该打印Student.run
    System.out.println(stdClass.getField("name"));//public java.lang.String Person.name
    // 获取private字段"grade":
    System.out.println(stdClass.getDeclaredField("grade"));//private int Student.grade
-  
+    
   ```
 
   ```java
@@ -882,25 +890,121 @@ p.run();//应该打印Student.run
 
 - ```java
   Person p = new Person("Xiao Ming");
-          System.out.println(p.getName()); // "Xiao Ming"
-          Class c = p.getClass();
-          Field f = c.getDeclaredField("name");
-          f.setAccessible(true);
-          f.set(p, "Xiao Hong");
-          System.out.println(p.getName()); // "Xiao Hong"
+  System.out.println(p.getName()); // "Xiao Ming"
+  Class c = p.getClass();
+  Field f = c.getDeclaredField("name");
+  f.setAccessible(true);
+  f.set(p, "Xiao Hong");
+  System.out.println(p.getName()); // "Xiao Hong"
   ```
+  
+- 用`getInterfaces`获取接口实例
 
-### 2、class实例调用
+- ```java
+   Class s = Integer.class;
+   Class[] is = s.getInterfaces();
+   ```
+
+- 要特别注意：`getInterfaces()`只返回当前类直接实现的接口类型，并不包括其父类实现的接口类型。如果一个类没有实现任何`interface`，那么`getInterfaces()`返回空数组。
+
+- 
+
+### 2、class实例方法调用
 
 - `Class`类提供了以下几个方法来获取`Method`：
   - `Method getMethod(name, Class...)`：获取某个`public`的`Method`（包括父类）
   - `Method getDeclaredMethod(name, Class...)`：获取当前类的某个`Method`（不包括父类）
   - `Method[] getMethods()`：获取所有`public`的`Method`（包括父类）
   - `Method[] getDeclaredMethods()`：获取当前类的所有`Method`（不包括父类）
+  
 - 一个`Method`对象包含一个方法的所有信息：
   - `getName()`：返回方法名称，例如：`"getScore"`；
   - `getReturnType()`：返回方法返回值类型，也是一个Class实例，例如：`String.class`；
   - `getParameterTypes()`：返回方法的参数类型，是一个Class数组，例如：`{String.class, int.class}`；
   - `getModifiers()`：返回方法的修饰符，它是一个`int`，不同的bit表示不同的含义。
+  
 - 对`Method`实例调用`invoke`就相当于调用该方法，`invoke`的第一个参数是对象实例，即在哪个实例上调用该方法，后面的可变参数要与方法参数一致，否则将报错。
+
 - 为了调用非public方法，我们通过`Method.setAccessible(true)`允许其调用
+
+- 使用反射调用方法时，仍然遵循多态原则：即总是调用实际类型的覆写方法（如果存在）
+
+- ```java
+  // 获取Person的hello方法:
+  Method h = Person.class.getMethod("hello");
+  // 对Student实例调用hello方法:
+  h.invoke(new Student());
+  //最终调用Student.hello
+  ```
+
+### 3、class实例构造方法
+
+- 我们通常使用`new`操作符创建新的实例
+
+- ```java
+  Person p = new Person();
+  ```
+
+  如果通过反射来创建新的实例，可以调用Class提供的`newInstance()`方法：
+
+  ```java
+  Person p = Person.class.newInstance();// 相当于使用new调用无参构造实例
+  ```
+
+  调用`Class.newInstance()`的局限是，它只能调用该类的`public`无参数构造方法。如果构造方法带有参数，或者不是`public`，就无法直接通过`Class.newInstance()`来调用。
+
+- 为了调用任意的构造方法，Java的反射API提供了`Constructor`对象，它包含一个构造方法的所有信息，可以创建一个实例。
+
+- 通过Class实例获取Constructor的方法如下：
+
+  - `getConstructor(Class...)`：获取某个`public`的`Constructor`；
+  - `getDeclaredConstructor(Class...)`：获取某个`Constructor`；
+  - `getConstructors()`：获取所有`public`的`Constructor`；
+  - `getDeclaredConstructors()`：获取所有`Constructor`。
+
+- 调用非`public`的`Constructor`时，必须首先通过`setAccessible(true)`设置允许访问。`setAccessible(true)`可能会失败。
+
+- ```java
+  class A{
+  	public A(){
+  		System.out.println("无参构造器");
+  	}
+  	public A(int a){
+  		System.out.println("int 有参构造器"+a);
+  	}
+  	private A(String b,String a){
+  		System.out.println("私有String 有参构造器"+b+a);
+  	}
+  }
+  
+  public class Main {
+  	public static void main(String[] args) throws Exception, SecurityException {
+  		Class clz = A.class;
+  		//获得所有构造器：getDeclaredConstructors()返回所有权限的构造器、getConstructors()返回public权限的构造器
+  		Constructor[] c = clz.getDeclaredConstructors();
+  		for (Constructor constructor : c) {
+  			System.out.println(constructor);
+  		}
+  		//或得某一个 构造器
+  		Constructor<A> c1 = clz.getDeclaredConstructor(String.class,String.class);//私有
+  		System.out.println(c1);
+  		Constructor<A> c2 = clz.getConstructor();//公共
+  		System.out.println(c2);
+      Constructor<A> c3 = clz.getConstructor(int.class);//公共有参
+  		System.out.println(c2);
+  		//通过public构造器 创建对象
+  		A a = c2.newInstance(new Object[]{});//创建对象时调用无参构造器 打印输出："无参构造器"
+  		// 通过private构造器 创建对象
+  		c1.setAccessible(true);//设置成可以通过私有构造器 创建对象
+  		A b = c1.newInstance(new Object[]{"1111","2222"});//打印输出：  私有String 有参构造器11112222
+  	}
+  }
+  ```
+
+
+### 4、动态代理
+
+- Java的`class`和`interface`的区别：
+  - 可以实例化`class`（非`abstract`）
+  - 不能实例化`interface`
+- 
